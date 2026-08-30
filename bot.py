@@ -107,7 +107,7 @@ async def start_command(_: Client, message: Message) -> None:
             [
                 InlineKeyboardButton(
                     "📢 Update Channel",
-                    url="https://t.me/yutabots"
+                    url="https://t.me/hack4user"
                 )
             ],
             [    
