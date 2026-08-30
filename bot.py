@@ -10,6 +10,8 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 import httpx
 from dotenv import load_dotenv
 from pyrogram import Client, filters
+from pyrogram.enums import ChatMemberStatus
+from pyrogram.errors import UserNotParticipant
 from pyrogram.types import Message
 
 load_dotenv(interpolate=False)
@@ -82,12 +84,6 @@ def build_api_url(template: str, placeholder: str, value: str, parameter: str) -
     return expanded
 
 
-def allowed_user(message: Message) -> bool:
-    configured = os.getenv("TELEGRAM_ADMIN_IDS", "")
-    admin_ids = {item.strip() for item in configured.split(",") if item.strip()}
-    return bool(message.from_user and str(message.from_user.id) in admin_ids)
-
-
 app = Client(
     "number_to_info_bot",
     api_id=int(os.environ["TELEGRAM_API_ID"]),
@@ -97,9 +93,54 @@ app = Client(
 
 
 OWNER_ID = 5927078600
+REQUIRED_CHANNEL = "hack4user"
+REQUIRED_CHANNEL_URL = "https://t.me/hack4user"
+
+
+async def has_joined_required_channel(client: Client, user_id: int) -> bool:
+    try:
+        member = await client.get_chat_member(REQUIRED_CHANNEL, user_id)
+        return member.status in {
+            ChatMemberStatus.OWNER,
+            ChatMemberStatus.ADMINISTRATOR,
+            ChatMemberStatus.MEMBER,
+            ChatMemberStatus.RESTRICTED,
+        }
+    except UserNotParticipant:
+        return False
+    except Exception:
+        logger.warning("Unable to verify channel membership for user %s", user_id, exc_info=True)
+        return False
+
+
+async def require_channel_join(client: Client, message: Message) -> bool:
+    if not message.from_user:
+        return False
+
+    if await has_joined_required_channel(client, message.from_user.id):
+        return True
+
+    await message.reply_text(
+        "You must join @hack4user before using this bot.\n\n"
+        "Please join the channel and then send /start again.",
+        reply_markup=InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton(
+                    "📢 Join Channel",
+                    url=REQUIRED_CHANNEL_URL,
+                )
+            ]
+        ]),
+        disable_web_page_preview=True,
+    )
+    return False
+
 
 @app.on_message(filters.command("start") & filters.private)
-async def start_command(_: Client, message: Message) -> None:
+async def start_command(client: Client, message: Message) -> None:
+    if not await require_channel_join(client, message):
+        return
+
     await message.reply_text(
         "👋 Welcome to the bot!\n\n"
         "Use the buttons below:",
@@ -107,13 +148,13 @@ async def start_command(_: Client, message: Message) -> None:
             [
                 InlineKeyboardButton(
                     "📢 Update Channel",
-                    url="https://t.me/hack4user"
+                    url=REQUIRED_CHANNEL_URL,
                 )
             ],
-            [    
+            [
                 InlineKeyboardButton(
                     "👤 Owner",
-                    user_id=OWNER_ID
+                    user_id=OWNER_ID,
                 )
             ]
         ]),
@@ -122,10 +163,10 @@ async def start_command(_: Client, message: Message) -> None:
 
 
 @app.on_message(filters.command("num") & filters.private)
-async def lookup_number(_: Client, message: Message) -> None:
-    if not allowed_user(message):
-        await message.reply_text("You are not authorized to use this bot.")
+async def lookup_number(client: Client, message: Message) -> None:
+    if not await require_channel_join(client, message):
         return
+
 
     parts = message.text.split(maxsplit=1) if message.text else []
     number = parts[1].strip() if len(parts) == 2 else ""
