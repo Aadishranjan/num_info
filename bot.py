@@ -96,7 +96,7 @@ app = Client(
 )
 
 
-OWNER_ID = 8433938551
+OWNER_ID = 5927078600
 
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(_: Client, message: Message) -> None:
