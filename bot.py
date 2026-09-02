@@ -145,10 +145,9 @@ async def start_command(client: Client, message: Message) -> None:
     await message.reply_text(
         "<b>🕵️‍♂️ NAnonymousDetails_bot</b>\n\n"
         "I can help you find information using osint commands.\n\n"
-        "<b<── ── ── ── ── ── ── ── ── ── ── ── ── ── ──\n"
+        "<b>── ── ── ── ── ── ── ── ── ── ── ── ── ── ──\n"
         "🛠 Available Commands:</b>\n\n"
-        "<code>/num number</code> - get number information\n"
-    ),
+        "<code>/num number</code> - get number information\n",
         reply_markup=InlineKeyboardMarkup([
             [
                 InlineKeyboardButton(
