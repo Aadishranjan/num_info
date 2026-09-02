@@ -10,7 +10,7 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 import httpx
 from dotenv import load_dotenv
 from pyrogram import Client, filters
-from pyrogram.enums import ChatMemberStatus
+from pyrogram.enums import ChatMemberStatus, ButtonStyle
 from pyrogram.errors import UserNotParticipant
 from pyrogram.types import Message
 
@@ -128,6 +128,7 @@ async def require_channel_join(client: Client, message: Message) -> bool:
                 InlineKeyboardButton(
                     "📢 Join Channel",
                     url=REQUIRED_CHANNEL_URL,
+                    style=ButtonStyle.PRIMARY,
                 )
             ]
         ]),
@@ -142,19 +143,25 @@ async def start_command(client: Client, message: Message) -> None:
         return
 
     await message.reply_text(
-        "👋 Welcome to the bot!\n\n"
-        "Use the buttons below:",
+        "<b>🕵️‍♂️ NAnonymousDetails_bot</b>\n\n"
+        "I can help you find information using osint commands.\n\n"
+        "<b<── ── ── ── ── ── ── ── ── ── ── ── ── ── ──\n"
+        "🛠 Available Commands:</b>\n\n"
+        "<code>/num number</code> - get number information\n"
+    ),
         reply_markup=InlineKeyboardMarkup([
             [
                 InlineKeyboardButton(
                     "📢 Update Channel",
                     url=REQUIRED_CHANNEL_URL,
+                    style=ButtonStyle.PRIMARY,
                 )
             ],
             [
                 InlineKeyboardButton(
                     "👤 Owner",
                     user_id=OWNER_ID,
+                    style=ButtonStyle.PRIMARY,
                 )
             ]
         ]),
